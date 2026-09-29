@@ -44,4 +44,26 @@ describe("quiz application flow", () => {
     expect(document.querySelectorAll(".review-card")).toHaveLength(10);
     expect(document.querySelector(".result-actions")).not.toBeNull();
   });
+
+  it("opens the categorized question list and exposes explanations", () => {
+    document
+      .querySelector<HTMLButtonElement>('button[data-action="question-list"]')
+      ?.click();
+
+    expect(document.querySelector(".question-list-shell")).not.toBeNull();
+    expect(document.querySelectorAll(".question-category")).toHaveLength(5);
+    expect(document.querySelectorAll(".question-list-item")).toHaveLength(120);
+
+    const firstItem = document.querySelector<HTMLDetailsElement>(
+      ".question-list-item",
+    );
+    expect(firstItem).not.toBeNull();
+    firstItem?.setAttribute("open", "");
+    expect(firstItem?.querySelector(".question-list-detail")?.textContent).toContain(
+      "正解",
+    );
+    expect(firstItem?.querySelector(".explanation")?.textContent).toContain(
+      "正誤の理由",
+    );
+  });
 });

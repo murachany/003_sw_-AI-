@@ -48,7 +48,7 @@ const sourceTypeLabels: Record<string, string> = {
   original: "オリジナル問題",
 };
 
-type Screen = "home" | "quiz" | "result";
+type Screen = "home" | "quiz" | "result" | "list";
 
 let screen: Screen = "home";
 let session: SessionSnapshot | null = null;
@@ -138,7 +138,9 @@ const renderHeader = (showHomeLink = false): string => `
     ${
       showHomeLink
         ? '<button class="text-button" type="button" data-action="go-home">トップへ戻る</button>'
-        : ""
+        : `<button class="text-button" type="button" data-action="question-list">
+            問題一覧（${questions.length}問）
+          </button>`
     }
   </header>
 `;
@@ -230,6 +232,80 @@ const renderHome = (): string => {
       </section>
       <footer class="footer">
         <p>学習状態はこのブラウザのlocalStorageにのみ保存されます。</p>
+      </footer>
+    </main>
+  `;
+};
+
+const renderQuestionList = (): string => {
+  const questionsByCategory = new Map<string, Question[]>();
+  for (const question of questions) {
+    const categoryQuestions = questionsByCategory.get(question.category) ?? [];
+    categoryQuestions.push(question);
+    questionsByCategory.set(question.category, categoryQuestions);
+  }
+
+  return `
+    <main class="app-shell question-list-shell">
+      ${renderHeader(true)}
+      ${renderNotice()}
+      <section class="question-list-hero" aria-labelledby="question-list-title">
+        <p class="eyebrow">QUESTION BANK</p>
+        <h1 id="question-list-title">問題一覧</h1>
+        <p class="lead">
+          全${questions.length}問をカテゴリ別に確認できます。問題を開くと正解・解説・周辺知識を表示します。
+        </p>
+      </section>
+      <div class="question-category-list">
+        ${[...questionsByCategory.entries()]
+          .map(
+            ([category, categoryQuestions]) => `
+              <section class="question-category" aria-labelledby="category-${escapeHtml(category)}">
+                <div class="section-heading">
+                  <h2 id="category-${escapeHtml(category)}">${escapeHtml(category)}</h2>
+                  <span>${categoryQuestions.length}問</span>
+                </div>
+                <div class="question-list">
+                  ${categoryQuestions
+                    .map(
+                      (question) => `
+                        <details class="question-list-item">
+                          <summary>
+                            <span class="question-summary-meta">
+                              <span class="category-badge">${escapeHtml(question.category)}</span>
+                              <span class="question-id">${escapeHtml(question.id)}</span>
+                            </span>
+                            <span class="question-list-text">${escapeHtml(question.question)}</span>
+                          </summary>
+                          <div class="question-list-detail">
+                            <div class="list-answer">
+                              <h3>正解</h3>
+                              <p>${choiceLetters[question.answerIndex]}：${escapeHtml(question.choices[question.answerIndex])}</p>
+                            </div>
+                            <div class="explanation">
+                              <h3>正誤の理由</h3>
+                              <p>${escapeHtml(question.explanation)}</p>
+                              <h3>試験対策として覚える周辺知識</h3>
+                              <ul>
+                                ${question.relatedKnowledge
+                                  .map((knowledge) => `<li>${escapeHtml(knowledge)}</li>`)
+                                  .join("")}
+                              </ul>
+                            </div>
+                            ${renderSource(question)}
+                          </div>
+                        </details>
+                      `,
+                    )
+                    .join("")}
+                </div>
+              </section>
+            `,
+          )
+          .join("")}
+      </div>
+      <footer class="footer">
+        <p>問題は公式シラバスを参照したオリジナル問題です。本試験過去問の転載ではありません。</p>
       </footer>
     </main>
   `;
@@ -519,6 +595,8 @@ function renderFatal(title: string, message: string): string {
 const render = (): void => {
   if (screen === "home") {
     app.innerHTML = renderHome();
+  } else if (screen === "list") {
+    app.innerHTML = renderQuestionList();
   } else if (screen === "quiz" && session) {
     app.innerHTML = renderQuiz(session);
   } else if (screen === "result" && session) {
@@ -641,6 +719,13 @@ app.addEventListener("click", (event) => {
       persist();
     }
     screen = "home";
+    notice = "";
+    render();
+    return;
+  }
+
+  if (action === "question-list") {
+    screen = "list";
     notice = "";
     render();
     return;
