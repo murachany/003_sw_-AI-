@@ -4,7 +4,7 @@ import { validateQuestions } from "./questionValidation";
 
 describe("question data", () => {
   it("contains the required number of questions", () => {
-    expect(questions).toHaveLength(50);
+    expect(questions).toHaveLength(120);
   });
 
   it("passes the data validation rules", () => {
@@ -12,7 +12,7 @@ describe("question data", () => {
   });
 
   it("uses unique IDs and covers the intended categories", () => {
-    expect(new Set(questions.map((question) => question.id)).size).toBe(50);
+    expect(new Set(questions.map((question) => question.id)).size).toBe(120);
     expect(new Set(questions.map((question) => question.category))).toEqual(
       new Set([
         "AI基礎",
@@ -22,6 +22,18 @@ describe("question data", () => {
         "プロンプト・活用",
       ]),
     );
+    expect(
+      questions.reduce<Record<string, number>>((counts, question) => {
+        counts[question.category] = (counts[question.category] ?? 0) + 1;
+        return counts;
+      }, {}),
+    ).toEqual({
+      AI基礎: 20,
+      "生成AIの技術": 29,
+      "生成AIの動向": 22,
+      "情報リテラシー・リスク": 31,
+      "プロンプト・活用": 18,
+    });
   });
 
   it("distributes correct answers across all four positions", () => {
