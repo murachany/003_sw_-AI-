@@ -1,0 +1,114 @@
+:root {
+  color: #233044;
+  background: #f4f7fb;
+  font-family:
+    Inter, "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo, sans-serif;
+  font-synthesis: none;
+  line-height: 1.7;
+  text-rendering: optimizeLegibility;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+}
+
+.app-shell {
+  display: grid;
+  gap: 2rem;
+  margin: 0 auto;
+  max-width: 760px;
+  padding: 4rem 1.25rem;
+}
+
+.hero {
+  padding: 1rem 0;
+}
+
+.eyebrow {
+  color: #4b6cb7;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  margin: 0 0 0.75rem;
+}
+
+h1,
+h2,
+p {
+  margin-top: 0;
+}
+
+h1 {
+  color: #162238;
+  font-size: clamp(2.25rem, 8vw, 4.5rem);
+  letter-spacing: -0.04em;
+  line-height: 1.15;
+  margin-bottom: 1.25rem;
+}
+
+h2 {
+  color: #162238;
+  font-size: 1.25rem;
+  margin-bottom: 0.75rem;
+}
+
+.lead {
+  color: #526176;
+  font-size: 1.1rem;
+  margin-bottom: 0;
+}
+
+.notice,
+.planned-features {
+  background: #ffffff;
+  border: 1px solid #dce4f0;
+  border-radius: 1rem;
+  box-shadow: 0 12px 30px rgb(35 48 68 / 7%);
+  padding: 1.5rem;
+}
+
+.notice {
+  border-left: 0.35rem solid #4b6cb7;
+}
+
+.notice p:last-child,
+.planned-features li:last-child {
+  margin-bottom: 0;
+}
+
+.notice-detail {
+  color: #526176;
+  font-size: 0.9rem;
+}
+
+.planned-features ul {
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+.planned-features li {
+  margin-bottom: 0.5rem;
+}
+
+.footer {
+  color: #64748b;
+  font-size: 0.85rem;
+  padding: 0 0.25rem;
+}
+
+@media (max-width: 520px) {
+  .app-shell {
+    gap: 1.5rem;
+    padding: 2.5rem 1rem;
+  }
+
+  .notice,
+  .planned-features {
+    padding: 1.25rem;
+  }
+}
