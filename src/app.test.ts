@@ -17,12 +17,38 @@ describe("quiz application flow", () => {
       'button[data-action="start"][data-count="10"]',
     );
     expect(startButton).not.toBeNull();
+    expect(
+      document.querySelector<HTMLButtonElement>(
+        'button[data-action="start"][data-count="60"]',
+      ),
+    ).not.toBeNull();
     startButton?.click();
 
     expect(document.querySelector(".question-card")).not.toBeNull();
     expect(
       document.querySelectorAll('button[data-action="answer"]'),
     ).toHaveLength(5);
+
+    document
+      .querySelector<HTMLButtonElement>(
+        'button[data-action="answer"][data-answer="0"]',
+      )
+      ?.click();
+    const selectedAnswer = document.querySelector<HTMLButtonElement>(
+      'button[data-action="answer"][aria-pressed="true"]',
+    );
+    expect(
+      selectedAnswer?.classList.contains("is-correct") ||
+        selectedAnswer?.classList.contains("is-incorrect"),
+    ).toBe(true);
+    expect(
+      document.querySelectorAll(".answer-button.is-correct-answer"),
+    ).toHaveLength(1);
+    expect(document.querySelector(".answer-feedback")).not.toBeNull();
+    expect(document.querySelector(".answer-feedback")?.textContent).toContain(
+      "正誤の理由",
+    );
+    expect(document.querySelector(".knowledge-explanation")).not.toBeNull();
 
     for (let index = 0; index < 10; index += 1) {
       document
@@ -52,7 +78,7 @@ describe("quiz application flow", () => {
 
     expect(document.querySelector(".question-list-shell")).not.toBeNull();
     expect(document.querySelectorAll(".question-category")).toHaveLength(5);
-    expect(document.querySelectorAll(".question-list-item")).toHaveLength(120);
+    expect(document.querySelectorAll(".question-list-item")).toHaveLength(200);
 
     const firstItem = document.querySelector<HTMLDetailsElement>(
       ".question-list-item",

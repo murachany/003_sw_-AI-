@@ -6,8 +6,8 @@ export const validateQuestions = (items: readonly Question[]): string[] => {
   const issues: string[] = [];
   const ids = new Set<string>();
 
-  if (items.length < 50) {
-    issues.push(`問題数が${items.length}問です。50問以上登録してください。`);
+  if (items.length < 60) {
+    issues.push(`問題数が${items.length}問です。60問以上登録してください。`);
   }
 
   items.forEach((item, index) => {

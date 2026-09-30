@@ -10,6 +10,7 @@ import {
 } from "./quiz";
 import { questions } from "./questions";
 import { validateQuestions } from "./questionValidation";
+import { explainKnowledge } from "./knowledge";
 import {
   clearSession,
   loadSession,
@@ -167,6 +168,21 @@ const renderSource = (question: Question): string => {
   `;
 };
 
+const renderRelatedKnowledge = (question: Question): string => `
+  <ul class="knowledge-list">
+    ${question.relatedKnowledge
+      .map(
+        (knowledge) => `
+          <li>
+            <strong class="knowledge-term">${escapeHtml(knowledge)}</strong>
+            <span class="knowledge-explanation">${escapeHtml(explainKnowledge(knowledge))}</span>
+          </li>
+        `,
+      )
+      .join("")}
+  </ul>
+`;
+
 const renderHome = (): string => {
   const resumableSession =
     session?.status === "in-progress" ? session : undefined;
@@ -216,7 +232,7 @@ const renderHome = (): string => {
       <section class="info-card" aria-labelledby="policy-title">
         <h2 id="policy-title">この教材について</h2>
         <ul class="feature-list">
-          <li>回答中は正解を表示せず、提出後に解説を確認できます。</li>
+          <li>回答を選ぶと、その場で正誤・正誤の理由・周辺知識を確認できます。</li>
           <li>「？」は要復習として記録され、正答率には含まれません。</li>
           <li>問題は公式シラバスを参照したオリジナル問題です。</li>
           <li>GUGAの本試験過去問を転載するものではありません。</li>
@@ -286,11 +302,7 @@ const renderQuestionList = (): string => {
                               <h3>正誤の理由</h3>
                               <p>${escapeHtml(question.explanation)}</p>
                               <h3>試験対策として覚える周辺知識</h3>
-                              <ul>
-                                ${question.relatedKnowledge
-                                  .map((knowledge) => `<li>${escapeHtml(knowledge)}</li>`)
-                                  .join("")}
-                              </ul>
+                              ${renderRelatedKnowledge(question)}
                             </div>
                             ${renderSource(question)}
                           </div>
@@ -358,6 +370,41 @@ const renderQuestionStatusList = (
   </ol>
 `;
 
+const renderAnswerFeedback = (
+  question: Question,
+  answer: Answer,
+): string => {
+  if (answer === null) {
+    return "";
+  }
+
+  const status = getQuestionStatus(question, answer);
+  const heading =
+    status === "correct"
+      ? "正解です"
+      : status === "incorrect"
+        ? "不正解です"
+        : "要復習です";
+  const answerText =
+    answer === "unknown"
+      ? "？（わからない・要復習）"
+      : `${choiceLetters[answer]}：${question.choices[answer]}`;
+
+  return `
+    <section class="answer-feedback feedback-${status}" aria-live="polite">
+      <h2>${heading}</h2>
+      <p>あなたの回答：${escapeHtml(answerText)}</p>
+      <p><strong>正解：${choiceLetters[question.answerIndex]}：${escapeHtml(question.choices[question.answerIndex])}</strong></p>
+      <div class="explanation">
+        <h3>正誤の理由</h3>
+        <p>${escapeHtml(question.explanation)}</p>
+        <h3>試験対策として覚える周辺知識</h3>
+        ${renderRelatedKnowledge(question)}
+      </div>
+    </section>
+  `;
+};
+
 const renderQuiz = (currentSession: SessionSnapshot): string => {
   const selectedQuestions = getSelectedQuestions(currentSession);
   if (!selectedQuestions) {
@@ -395,11 +442,28 @@ const renderQuiz = (currentSession: SessionSnapshot): string => {
             .map(
               (choice, index) => `
                 <button
-                  class="answer-button ${answer === index ? "is-selected" : ""}"
+                  class="answer-button ${
+                    answer !== null && index === currentQuestion.answerIndex
+                      ? "is-correct-answer"
+                      : ""
+                  } ${
+                    answer === index
+                      ? answer === currentQuestion.answerIndex
+                        ? "is-correct"
+                        : "is-incorrect"
+                      : ""
+                  } ${answer === index ? "is-selected" : ""}"
                   type="button"
                   data-action="answer"
                   data-answer="${index}"
                   aria-pressed="${answer === index}"
+                  aria-label="${choiceLetters[index]}：${escapeHtml(choice)}${
+                    answer !== null && index === currentQuestion.answerIndex
+                      ? "（正解）"
+                      : answer === index
+                        ? "（不正解）"
+                        : ""
+                  }"
                 >
                   <span class="choice-letter">${choiceLetters[index]}</span>
                   <span>${escapeHtml(choice)}</span>
@@ -418,41 +482,42 @@ const renderQuiz = (currentSession: SessionSnapshot): string => {
             <span>わからない・要復習</span>
           </button>
         </div>
+        ${renderAnswerFeedback(currentQuestion, answer)}
       </section>
+      ${
+        notice
+          ? `<p class="inline-alert" role="alert">${escapeHtml(notice)}</p>`
+          : ""
+      }
+      <div class="button-row navigation-buttons">
+        <button
+          class="secondary-button"
+          type="button"
+          data-action="previous"
+          ${currentSession.currentIndex === 0 ? "disabled" : ""}
+        >
+          前の問題
+        </button>
+        ${
+          isLastQuestion
+            ? `
+              <button class="primary-button" type="button" data-action="submit">
+                提出する
+              </button>
+            `
+            : `
+              <button class="primary-button" type="button" data-action="next">
+                次の問題
+              </button>
+            `
+        }
+      </div>
       <section class="navigation-card" aria-labelledby="navigation-title">
         <div class="section-heading">
           <h2 id="navigation-title">回答状況</h2>
           <span>${selectedQuestions.length - unanswered}/${selectedQuestions.length}問回答済み</span>
         </div>
         ${renderQuestionStatusList(currentSession, selectedQuestions)}
-        ${
-          notice
-            ? `<p class="inline-alert" role="alert">${escapeHtml(notice)}</p>`
-            : ""
-        }
-        <div class="button-row navigation-buttons">
-          <button
-            class="secondary-button"
-            type="button"
-            data-action="previous"
-            ${currentSession.currentIndex === 0 ? "disabled" : ""}
-          >
-            前の問題
-          </button>
-          ${
-            isLastQuestion
-              ? `
-                <button class="primary-button" type="button" data-action="submit">
-                  提出する
-                </button>
-              `
-              : `
-                <button class="primary-button" type="button" data-action="next">
-                  次の問題
-                </button>
-              `
-          }
-        </div>
       </section>
     </main>
   `;
@@ -488,11 +553,7 @@ const renderReviewItem = (
         <h4>正誤の理由</h4>
         <p>${escapeHtml(question.explanation)}</p>
         <h4>試験対策として覚える周辺知識</h4>
-        <ul>
-          ${question.relatedKnowledge
-            .map((knowledge) => `<li>${escapeHtml(knowledge)}</li>`)
-            .join("")}
-        </ul>
+        ${renderRelatedKnowledge(question)}
       </div>
       ${renderSource(question)}
     </article>

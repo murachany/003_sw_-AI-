@@ -6,7 +6,7 @@ import type {
   SessionSnapshot,
 } from "./types";
 
-export const QUIZ_COUNTS = [10, 30, 50] as const;
+export const QUIZ_COUNTS = [10, 30, 60] as const;
 
 type RandomFunction = () => number;
 

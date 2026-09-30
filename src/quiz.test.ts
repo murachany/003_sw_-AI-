@@ -5,11 +5,17 @@ import {
   createSession,
   getFilteredQuestions,
   getQuestionStatus,
+  QUIZ_COUNTS,
   selectQuestions,
 } from "./quiz";
 import { questions } from "./questions";
 
 describe("quiz logic", () => {
+  it("offers the exam-length 60-question mode", () => {
+    expect(QUIZ_COUNTS).toEqual([10, 30, 60]);
+    expect(selectQuestions(questions, 60, () => 0.25)).toHaveLength(60);
+  });
+
   it("selects unique questions while balancing categories", () => {
     const selected = selectQuestions(questions, 10, () => 0.25);
     expect(selected).toHaveLength(10);
